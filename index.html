@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Gastos - Comunidades</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Control de Gastos de Comunidades</h1>
+
+        <!-- Formulario para crear una nueva comunidad -->
+        <form id="crear-comunidad-form">
+            <h2>Crear Nueva Comunidad</h2>
+            <input type="text" id="nombre-comunidad" placeholder="Nombre de la comunidad" required>
+            <button type="submit">Crear Comunidad</button>
+        </form>
+
+        <!-- Lista de comunidades -->
+        <div id="comunidades-list"></div>
+
+        <!-- Formulario para añadir gastos -->
+        <form id="añadir-gasto-form" style="display: none;">
+            <h2>Añadir Gasto</h2>
+            <select id="comunidad-select" required>
+                <option value="">Selecciona una comunidad</option>
+            </select>
+            <input type="text" id="concepto-gasto" placeholder="Concepto del gasto" required>
+            <input type="number" id="monto-gasto" placeholder="Monto del gasto" step="0.01" required>
+            <button type="submit">Añadir Gasto</button>
+        </form>
+
+        <!-- Lista de gastos -->
+        <div id="gastos-list"></div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
