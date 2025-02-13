@@ -3,38 +3,514 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Control de Gastos - Comunidades</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Sistema de Gestión de Comunidades</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --success-color: #2ecc71;
+            --danger-color: #e74c3c;
+            --background-color: #f5f5f5;
+            --card-background: #ffffff;
+            --header-background: #2c3e50;
+            --text-color: #333;
+            --border-color: #ddd;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background-color: var(--header-background);
+            color: white;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            margin-bottom: 1rem;
+        }
+
+        .btn {
+            padding: 0.7rem 1.2rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin: 5px;
+            font-size: 0.9rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .btn-primary { 
+            background-color: var(--primary-color); 
+            color: white; 
+        }
+
+        .btn-success { 
+            background-color: var(--success-color); 
+            color: white; 
+        }
+
+        .btn-danger { 
+            background-color: var(--danger-color); 
+            color: white; 
+        }
+
+        .community-card {
+            background: var(--card-background);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 25px;
+            transition: transform 0.3s ease;
+        }
+
+        .community-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .community-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .search-bar {
+            width: 100%;
+            padding: 0.8rem;
+            margin: 1rem 0;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .search-bar:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .residents-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .residents-table th, 
+        .residents-table td {
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .residents-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+
+        .residents-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .summary-section {
+            background: var(--card-background);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .btn {
+                width: 100%;
+                margin: 5px 0;
+            }
+
+            .community-header {
+                flex-direction: column;
+            }
+
+            .residents-table {
+                display: block;
+                overflow-x: auto;
+            }
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .total-amount {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+    </style>
 </head>
 <body>
     <div class="container">
-        <h1>Control de Gastos de Comunidades</h1>
-
-        <!-- Formulario para crear una nueva comunidad -->
-        <form id="crear-comunidad-form">
-            <h2>Crear Nueva Comunidad</h2>
-            <input type="text" id="nombre-comunidad" placeholder="Nombre de la comunidad" required>
-            <button type="submit">Crear Comunidad</button>
-        </form>
-
-        <!-- Lista de comunidades -->
-        <div id="comunidades-list"></div>
-
-        <!-- Formulario para añadir gastos -->
-        <form id="añadir-gasto-form" style="display: none;">
-            <h2>Añadir Gasto</h2>
-            <select id="comunidad-select" required>
-                <option value="">Selecciona una comunidad</option>
-            </select>
-            <input type="text" id="concepto-gasto" placeholder="Concepto del gasto" required>
-            <input type="number" id="monto-gasto" placeholder="Monto del gasto" step="0.01" required>
-            <button type="submit">Añadir Gasto</button>
-        </form>
-
-        <!-- Lista de gastos -->
-        <div id="gastos-list"></div>
+        <div class="header">
+            <h1>Sistema de Gestión de Comunidades</h1>
+            <button class="btn btn-primary" onclick="showAddCommunityModal()">Añadir Comunidad</button>
+            <button class="btn btn-success" onclick="exportToPDF()">Exportar a PDF</button>
+            <button class="btn btn-success" onclick="exportToExcel()">Exportar a Excel</button>
+        </div>
+        <div id="communities"></div>
     </div>
 
-    <script src="app.js"></script>
+    <!-- Modal para añadir/editar comunidad -->
+    <div id="communityModal" class="modal">
+        <div class="modal-content">
+            <h2 id="modalTitle">Añadir Comunidad</h2>
+            <form id="communityForm" onsubmit="handleCommunitySubmit(event)">
+                <div class="form-group">
+                    <label for="communityName">Nombre de la Comunidad</label>
+                    <input type="text" id="communityName" required>
+                </div>
+                <div class="form-group">
+                    <label for="communityAddress">Dirección</label>
+                    <input type="text" id="communityAddress" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Guardar</button>
+                <button type="button" class="btn btn-danger" onclick="closeModal('communityModal')">Cancelar</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para añadir/editar residente -->
+    <div id="residentModal" class="modal">
+        <div class="modal-content">
+            <h2 id="residentModalTitle">Añadir Vecino</h2>
+            <form id="residentForm" onsubmit="handleResidentSubmit(event)">
+                <div class="form-group">
+                    <label for="residentName">Nombre</label>
+                    <input type="text" id="residentName" required>
+                </div>
+                <div class="form-group">
+                    <label for="residentFloor">Piso</label>
+                    <input type="text" id="residentFloor" required>
+                </div>
+                <div class="form-group">
+                    <label for="residentDoor">Puerta</label>
+                    <input type="text" id="residentDoor" required>
+                </div>
+                <div class="form-group">
+                    <label for="residentQuota">Cuota Mensual (€)</label>
+                    <input type="number" id="residentQuota" min="0" step="0.01" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Guardar</button>
+                <button type="button" class="btn btn-danger" onclick="closeModal('residentModal')">Cancelar</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let communities = JSON.parse(localStorage.getItem('communities')) || [];
+        let currentCommunityId = null;
+
+        function saveToLocalStorage() {
+            localStorage.setItem('communities', JSON.stringify(communities));
+        }
+
+        function showModal(modalId) {
+            document.getElementById(modalId).style.display = 'flex';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        function showAddCommunityModal() {
+            document.getElementById('modalTitle').textContent = 'Añadir Comunidad';
+            document.getElementById('communityForm').reset();
+            showModal('communityModal');
+        }
+
+        function handleCommunitySubmit(event) {
+            event.preventDefault();
+            const name = document.getElementById('communityName').value;
+            const address = document.getElementById('communityAddress').value;
+
+            communities.push({
+                id: Date.now(),
+                name,
+                address,
+                residents: []
+            });
+
+            saveToLocalStorage();
+            renderCommunities();
+            closeModal('communityModal');
+        }
+
+        function showAddResidentModal(communityId) {
+            currentCommunityId = communityId;
+            document.getElementById('residentModalTitle').textContent = 'Añadir Vecino';
+            document.getElementById('residentForm').reset();
+            showModal('residentModal');
+        }
+
+        function handleResidentSubmit(event) {
+            event.preventDefault();
+            const community = communities.find(c => c.id === currentCommunityId);
+            
+            const resident = {
+                id: Date.now(),
+                name: document.getElementById('residentName').value,
+                floor: document.getElementById('residentFloor').value,
+                door: document.getElementById('residentDoor').value,
+                quota: parseFloat(document.getElementById('residentQuota').value)
+            };
+
+            community.residents.push(resident);
+            saveToLocalStorage();
+            renderCommunities();
+            closeModal('residentModal');
+        }
+
+        function removeResident(communityId, residentId) {
+            if (confirm('¿Está seguro de que desea eliminar este vecino?')) {
+                const community = communities.find(c => c.id === communityId);
+                community.residents = community.residents.filter(r => r.id !== residentId);
+                saveToLocalStorage();
+                renderCommunities();
+            }
+        }
+
+        function removeCommunity(communityId) {
+            if (confirm('¿Está seguro de que desea eliminar esta comunidad?')) {
+                communities = communities.filter(c => c.id !== communityId);
+                saveToLocalStorage();
+                renderCommunities();
+            }
+        }
+
+        function filterResidents(input, communityId) {
+            const searchTerm = input.value.toLowerCase();
+            const community = communities.find(c => c.id === communityId);
+            renderResidentsTable(community, searchTerm);
+        }
+
+        function calculateCommunityStats(community) {
+            const totalResidents = community.residents.length;
+            const totalQuota = community.residents.reduce((sum, r) => sum + r.quota, 0);
+            const avgQuota = totalResidents ? (totalQuota / totalResidents).toFixed(2) : 0;
+
+            return `
+                <div class="stats-container">
+                    <div class="stat-card">
+                        <h3>Total Vecinos</h3>
+                        <div class="total-amount">${totalResidents}</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Cuota Total</h3>
+                        <div class="total-amount">${totalQuota.toFixed(2)}€</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Cuota Media</h3>
+                        <div class="total-amount">${avgQuota}€</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderResidentsTable(community, searchTerm = '') {
+            const filteredResidents = community.residents.filter(r => 
+                r.name.toLowerCase().includes(searchTerm) ||
+                r.floor.toLowerCase().includes(searchTerm) ||
+                r.door.toLowerCase().includes(searchTerm)
+            );
+
+            return `
+                <table class="residents-table">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Piso</th>
+                            <th>Puerta</th>
+                            <th>Cuota</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${filteredResidents.map(r => `
+                            <tr>
+                                <td>${r.name}</td>
+                                <td>${r.floor}</td>
+                                <td>${r.door}</td>
+                                <td>${r.quota.toFixed(2)}€</td>
+                                <td>
+                                    <button class="btn btn-danger" onclick="removeResident(${community.id}, ${r.id})">
+                                        Eliminar
+                                    </button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        function renderCommunities() {
+            const container = document.getElementById('communities');
+            container.innerHTML = communities.map(community => `
+                <div class="community-card">
+                    <div class="community-header">
+                        <h2>${community.name}</h2>
+                        <div>
+                            <button class="btn btn-primary" onclick="showAddResidentModal(${community.id})">
+                                Añadir Vecino
+                            </button>
+                            <button class="btn btn-danger" onclick="removeCommunity(${community.id})">
+                                Eliminar Comunidad
+                            </button>
+                        </div>
+                    </div>
+                    <p><strong>Dirección:</strong> ${community.address}</p>
+                    <div class="summary-section">
+                        ${calculateCommunityStats(community)}
+                    </div>
+                    <input 
+                        type="text" 
+                        class="search-bar" 
+                        placeholder="Buscar vecinos..." 
+                        oninput="filterResidents(this, ${community.id})"
+                    >
+                    ${renderResidentsTable(community)}
+                </div>
+            `).join('');
+        }
+
+        function exportToPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            communities.forEach((community, index) => {
+                if (index > 0) {
+                    doc.addPage();
+                }
+                doc.setFontSize(18);
+                doc.text(`Comunidad: ${community.name}`, 10, 10);
+                doc.setFontSize(12);
+                doc.text(`Dirección: ${community.address}`, 10, 20);
+
+                const stats = calculateCommunityStats(community);
+                const statsText = stats.replace(/<[^>]+>/g, ''); // Remove HTML tags
+                doc.text(statsText, 10, 30);
+
+                const residents = community.residents.map(r => 
+                    `${r.name} | Piso: ${r.floor} | Puerta: ${r.door} | Cuota: ${r.quota.toFixed(2)}€`
+                ).join('\n');
+                doc.text(residents, 10, 60);
+            });
+
+            doc.save('comunidades.pdf');
+        }
+
+        function exportToExcel() {
+            const wb = XLSX.utils.book_new();
+            communities.forEach((community, index) => {
+                const wsData = [
+                    ['Comunidad', community.name],
+                    ['Dirección', community.address],
+                    [],
+                    ['Nombre', 'Piso', 'Puerta', 'Cuota Mensual (€)']
+                ];
+
+                community.residents.forEach(r => {
+                    wsData.push([r.name, r.floor, r.door, r.quota.toFixed(2)]);
+                });
+
+                const ws = XLSX.utils.aoa_to_sheet(wsData);
+                XLSX.utils.book_append_sheet(wb, ws, `Comunidad ${index + 1}`);
+            });
+
+            XLSX.writeFile(wb, 'comunidades.xlsx');
+        }
+
+        // Renderizar las comunidades al cargar la página
+        document.addEventListener('DOMContentLoaded', renderCommunities);
+    </script>
 </body>
 </html>
